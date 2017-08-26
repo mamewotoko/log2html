@@ -4,7 +4,6 @@ import argparse
 import copy
 import gzip
 import html
-import json
 import logging
 import random
 
@@ -22,13 +21,11 @@ formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+
 def sim(a, b):
     """similarity of log (text data) using difflib.SequenceMacher."""
     return SequenceMatcher(None, a, b).ratio()
 
-def similarity_for_index(data):
-    (idx, a, b) = data
-    return (idx, sim(a, b))
 
 def cluster_lines(log_id_list, log_lines, thres):
     comp_group = {}
@@ -48,6 +45,7 @@ def cluster_lines(log_id_list, log_lines, thres):
         else:
             comp_group[len(comp_group.keys())] = [i]
     return comp_group
+
 
 def merge_cluster(a, b, log_lines, thres):
     result = copy.deepcopy(a)
@@ -77,6 +75,7 @@ def merge_cluster(a, b, log_lines, thres):
             # logger.debug("add %d %d" % (next_id, b_comp_id))                
             result[next_id] = b[b_comp_id]
     return result
+
 
 def main():
     parser = argparse.ArgumentParser(description='log viewer')

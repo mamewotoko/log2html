@@ -3,13 +3,14 @@
 import argparse
 import copy
 import gzip
+import html
 import json
 import logging
 import random
 
 from concurrent.futures import ProcessPoolExecutor
 from difflib import SequenceMatcher
-import plyvel
+#import plyvel
 
 #logging.basicConfig(filename='debug.log', level=logging.DEBUG)
 logger = logging.getLogger("display_log")
@@ -28,32 +29,6 @@ def sim(a, b):
 def similarity_for_index(data):
     (idx, a, b) = data
     return (idx, sim(a, b))
-
-def index_generator(l):
-    for i in range(0, len(l)):
-        for j in range(i+1, len(l)):
-            yield ((i, j), l[i], l[j])
-
-def make_index(i, j):
-    if j < i:
-        return (j, i)
-    return (i, j)
-
-def dfs(start, node, edge_db, visited):
-    visited.append(start)
-    node.remove(start)
-
-    candidate = list(node)
-    for n in candidate:
-        if n in visited:
-            continue
-        idx = make_index(start, n)
-        key = str(idx)
-        # has edge
-        if edge_db.get(key.encode('utf-8')) is not None:
-            (node, visited) = dfs(n, node, edge_db, visited)
-
-    return (node, visited)
 
 def cluster_lines(log_id_list, log_lines, thres):
     comp_group = {}
@@ -123,10 +98,6 @@ def main():
             with open(log, "r") as f:
                 log_lines += f.read().splitlines()
 
-    db = plyvel.DB("./db/lines/", create_if_missing=True)
-    for i in range(0, len(log_lines)):
-        db.put(str(i).encode('utf-8'), json.dumps({ 'id': i, 'log': log_lines[i]}).encode('utf-8'))
-
     nlines = len(log_lines)    
 
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
@@ -140,7 +111,6 @@ def main():
             future = executor.submit(cluster_lines, range(nlines-remain, nlines), log_lines, thres)
             clusters.append(future)
 
-        # todo: concurrent
         count = 0
         while(1 < len(clusters)):
             fst = clusters.pop(0)
@@ -173,10 +143,10 @@ def main():
     for comp_id in comp_group.keys():
         colors[comp_id] = "#%06x" % random.randint(0, 0xFFFFFF)
 
-    HEAD = """
-<html lang="ja">
+    HEAD = """<html lang="ja">
 <head>
 <meta charset="utf-8">
+<title>Log</title>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
 <style type="text/css">
@@ -200,13 +170,11 @@ def main():
 
     for i in range(0, nlines):
         comp_id = comp[i]
-        j = json.loads(db.get(str(i).encode('utf-8')).decode('utf-8'))
-        log = j['log']
+        log = html.escape(log_lines[i])
         print("""<tr class="comp%s" id="%d"><td>%d</td><td>%s</td><td class="log">%s</td></tr>""" % (comp_id, i, i, comp_id, log))
 
     print("""</tbody></table></body></html>""")
 
-    db.close()
 
 if __name__ == '__main__':
     main()

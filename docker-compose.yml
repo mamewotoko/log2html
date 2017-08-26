@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+  log2html:
+    build: .
+    volumes:
+      - .:/opt/work

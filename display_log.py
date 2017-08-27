@@ -9,9 +9,8 @@ import random
 
 from concurrent.futures import ProcessPoolExecutor
 from difflib import SequenceMatcher
-#import plyvel
 
-#logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+
 logger = logging.getLogger("display_log")
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
@@ -71,8 +70,8 @@ def merge_cluster(a, b, log_lines, thres):
         else:
             next_id = 0
             if 0 < len(a.keys()):
-                next_id = max(result.keys())+1
-            # logger.debug("add %d %d" % (next_id, b_comp_id))                
+                next_id = max(result.keys()) + 1
+            # logger.debug("add %d %d" % (next_id, b_comp_id))
             result[next_id] = b[b_comp_id]
     return result
 
@@ -97,17 +96,23 @@ def main():
             with open(log, "r") as f:
                 log_lines += f.read().splitlines()
 
-    nlines = len(log_lines)    
+    nlines = len(log_lines)
 
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         chunksize = 1000
         clusters = []
-        for i in range(0, nlines//chunksize):
-            future = executor.submit(cluster_lines, range(i*chunksize, (i+1)*chunksize), log_lines, thres)
+        for i in range(0, nlines // chunksize):
+            future = executor.submit(cluster_lines,
+                                     range(i * chunksize, (i + 1) * chunksize),
+                                     log_lines,
+                                     thres)
             clusters.append(future)
         remain = nlines % chunksize
         if 0 < remain:
-            future = executor.submit(cluster_lines, range(nlines-remain, nlines), log_lines, thres)
+            future = executor.submit(cluster_lines,
+                                     range(nlines - remain, nlines),
+                                     log_lines,
+                                     thres)
             clusters.append(future)
 
         count = 0
@@ -125,17 +130,11 @@ def main():
 
         # logger.debug("last: %s" % clusters)
         comp_group = clusters[0].result()
-        
+
     comp = {}
-    for i in range(0, max(comp_group.keys())+1):
+    for i in range(0, max(comp_group.keys()) + 1):
         for m in comp_group[i]:
             comp[m] = i
-    # logger.debug("comp_group: %s" % json.dumps(comp_group, indent=2))
-    # logger.debug("comp: %s" % json.dumps(comp, indent=2))
-
-    # for comp_id in range(0, len(component)):
-    #     for node_id in component[comp_id]:
-    #         comp[node_id] = comp_id
 
     random.seed(a=1234)
     colors = {}

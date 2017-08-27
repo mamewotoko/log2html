@@ -145,14 +145,23 @@ def main():
 <head>
 <meta charset="utf-8">
 <title>Log</title>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+   crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
+<script>
+  $(function(){
+    $("#table").DataTable( {'paging': false });
+  });
+</script>
 <style type="text/css">
     """
 
     print(HEAD)
     for comp_id in colors.keys():
-        print(""".comp%s { background-color: %s }""" % (comp_id, colors[comp_id]))
+        print(""".comp%s { background-color: %s !important; }""" % (comp_id, colors[comp_id]))
 
     print("""
     </style>
@@ -169,7 +178,7 @@ def main():
     for i in range(0, nlines):
         comp_id = comp[i]
         log = html.escape(log_lines[i])
-        print("""<tr class="comp%s" id="%d"><td>%d</td><td>%s</td><td class="log">%s</td></tr>""" % (comp_id, i, i, comp_id, log))
+        print("""<tr class="comp%s" id="%d"><td>%d</td><td>%s</td><td class="log" data-col="log">%s</td></tr>""" % (comp_id, i, i, comp_id, log))
 
     print("""</tbody></table></body></html>""")
 

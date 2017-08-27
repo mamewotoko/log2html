@@ -152,9 +152,13 @@ def main():
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
 <script>
-  $(function(){
-    $("#table").DataTable( {'paging': false });
+$(function(){
+  var table = $("#table").DataTable({paging: false, select: true });
+  $("#comp_filter").on('keyup', function(){
+    var keyword = $("#comp_filter").val();
+    table.column(1).search(keyword ? "^"+keyword+"$" : "", true, false).draw();
   });
+});
 </script>
 <style type="text/css">
     """
@@ -178,7 +182,7 @@ def main():
     for i in range(0, nlines):
         comp_id = comp[i]
         log = html.escape(log_lines[i])
-        print("""<tr class="comp%s" id="%d"><td>%d</td><td>%s</td><td class="log" data-col="log">%s</td></tr>""" % (comp_id, i, i, comp_id, log))
+        print("""<tr class="comp%s" id="%d"><td>%d</td><td>%s</td><td class="log">%s</td></tr>""" % (comp_id, i, i, comp_id, log))
 
     print("""</tbody></table></body></html>""")
 

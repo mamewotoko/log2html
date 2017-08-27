@@ -3,12 +3,14 @@
 import argparse
 import copy
 import gzip
-import html
+import json
 import logging
 import random
 
 from concurrent.futures import ProcessPoolExecutor
 from difflib import SequenceMatcher
+
+from jinja2 import Environment, PackageLoader, select_autoescape
 
 
 logger = logging.getLogger("display_log")
@@ -80,6 +82,7 @@ def main():
     parser = argparse.ArgumentParser(description='log viewer')
     parser.add_argument('--threads', type=int, default=1, help='number of threads')
     parser.add_argument('--thres', type=float, default=0.8, help='sim thres')
+    parser.add_argument('--output-context', type=argparse.FileType('w'), nargs='?')
     parser.add_argument('files', nargs='*', help='path of log file')
 
     args = parser.parse_args()
@@ -137,54 +140,31 @@ def main():
             comp[m] = i
 
     random.seed(a=1234)
-    colors = {}
+    # colors = {}
+
+    context = {}
+    context['comps'] = []
     for comp_id in comp_group.keys():
-        colors[comp_id] = "#%06x" % random.randint(0, 0xFFFFFF)
+        color = "#%06x" % random.randint(0, 0xFFFFFF)
+        context['comps'].append(dict(comp_id=comp_id, comp_color=color))
 
-    HEAD = """<html lang="ja">
-<head>
-<meta charset="utf-8">
-<title>Log</title>
-<script
-  src="https://code.jquery.com/jquery-3.2.1.min.js"
-  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-   crossorigin="anonymous"></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.css">
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
-<script>
-$(function(){
-  var table = $("#table").DataTable({paging: false, select: true });
-  $("#comp_filter").on('keyup', function(){
-    var keyword = $("#comp_filter").val();
-    table.column(1).search(keyword ? "^"+keyword+"$" : "", true, false).draw();
-  });
-});
-</script>
-<style type="text/css">
-    """
+    context['num_comps'] = len(context['comps'])
+    context['num_lines'] = nlines
+    context['log_lines'] = []
 
-    print(HEAD)
-    for comp_id in colors.keys():
-        print(""".comp%s { background-color: %s !important; }""" % (comp_id, colors[comp_id]))
+    for i in range(0, len(log_lines)):
+        context['log_lines'].append(dict(log_id=i, comp_id=comp[i], content=log_lines[i]))
 
-    print("""
-    </style>
-    </head>
-    <body>
-    comp %d/lines %d
-    <table class="table">
-    <thead>
-    <tr><th>line</th><th>comp</th><th>log</th></tr>
-    </thead>
-    <tbody>
-    """ % (len(comp_group.keys()), len(log_lines)))
+    if args.output_context is not None:
+        args.output_context.write(json.dumps(context, indent=2))
 
-    for i in range(0, nlines):
-        comp_id = comp[i]
-        log = html.escape(log_lines[i])
-        print("""<tr class="comp%s" id="%d"><td>%d</td><td>%s</td><td class="log">%s</td></tr>""" % (comp_id, i, i, comp_id, log))
+    env = Environment(
+        loader=PackageLoader('display_log', 'templates'),
+        autoescape=select_autoescape(['html'])
+    )
 
-    print("""</tbody></table></body></html>""")
+    template = env.get_template("template.html")
+    print(template.render(context))
 
 
 if __name__ == '__main__':

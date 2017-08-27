@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />  
+    <title>Log</title>
+    <script
+       src="https://code.jquery.com/jquery-3.2.1.min.js"
+       integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+       crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.css"> 
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
+
+    <script>
+$(function(){
+  var table = $("#table").DataTable({paging: false, select: true });
+  $("#comp_filter").on('keyup', function(){
+    var keyword = $("#comp_filter").val();
+    table.column(1).search(keyword ? "^"+keyword+"$" : "", true, false).draw();
+  });
+});
+</script>
+    <style type="text/css">
+      {% for comp in comps %}
+      .comp{{comp.comp_id}} { background-color: {{comp.comp_color}} !important; }
+      {% endfor %}
+    </style>
+  </head>
+  <body>
+    comp {{num_comps}}/lines {{num_lines}}  Comp filter: <input type="text" id="comp_filter"/>
+    <table id="table" class="table">
+      <thead>
+        <tr><th>line</th><th>comp</th><th class="skip-filter">log</th></tr>
+      </thead>
+      <tbody>
+        {% for line in log_lines %}
+        <tr class="comp{{ line.comp_id }}" id="{{ line.log_id }}">
+          <td>{{ line.log_id }}</td>
+          <td>{{ line.comp_id }}</td>
+          <td class="log">{{ line.content|e }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>
+</body></html>

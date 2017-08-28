@@ -6,14 +6,15 @@ import gzip
 import json
 import logging
 import random
+import traceback
 
-from concurrent.futures import ProcessPoolExecutor
 from difflib import SequenceMatcher
 
+from distributed import Client
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 
-logger = logging.getLogger("display_log")
+logger = logging.getLogger("dist_log")
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -83,10 +84,14 @@ def main():
     parser.add_argument('--threads', type=int, default=1, help='number of threads')
     parser.add_argument('--thres', type=float, default=0.8, help='sim thres')
     parser.add_argument('--output-context', type=argparse.FileType('w'), nargs='?')
+    parser.add_argument('--client', type=str, nargs=1, help='ipaddr:port of scheduler')
     parser.add_argument('files', nargs='*', help='path of log file')
 
     args = parser.parse_args()
+
     thres = args.thres
+
+    client = Client(args.client[0])
 
     log_lines = []
     for log in args.files:
@@ -100,38 +105,38 @@ def main():
 
     nlines = len(log_lines)
 
-    with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        chunksize = 1000
-        clusters = []
-        for i in range(0, nlines // chunksize):
-            future = executor.submit(cluster_lines,
-                                     range(i * chunksize, (i + 1) * chunksize),
-                                     log_lines,
-                                     thres)
-            clusters.append(future)
-        remain = nlines % chunksize
-        if 0 < remain:
-            future = executor.submit(cluster_lines,
-                                     range(nlines - remain, nlines),
-                                     log_lines,
-                                     thres)
-            clusters.append(future)
+#    with ProcessPoolExecutor(max_workers=args.threads) as executor:
+    chunksize = 1000
+    clusters = []
+    for i in range(0, nlines // chunksize):
+        future = client.submit(cluster_lines,
+                               range(i * chunksize, (i + 1) * chunksize),
+                               log_lines,
+                               thres)
+        clusters.append(future)
+    remain = nlines % chunksize
+    if 0 < remain:
+        future = client.submit(cluster_lines,
+                               range(nlines - remain, nlines),
+                               log_lines,
+                               thres)
+        clusters.append(future)
 
-        count = 0
-        while(1 < len(clusters)):
-            fst = clusters.pop(0)
-            # logger.debug("fst %d: %s" % (count, json.dumps(fst.result(), indent=2)))
+    count = 0
+    while(1 < len(clusters)):
+        fst = clusters.pop(0)
+        logger.debug("fst %d: %s" % (count, json.dumps(fst.result(), indent=2)))
 
-            snd = clusters.pop(0)
-            # logger.debug("snd %d: %s" % (count, json.dumps(snd.result(), indent=2)))
+        snd = clusters.pop(0)
+        logger.debug("snd %d: %s" % (count, json.dumps(snd.result(), indent=2)))
 
-            merged = executor.submit(merge_cluster, fst.result(), snd.result(), log_lines, thres)
-            # logger.debug("merged %d: %s" % (count, json.dumps(merged.result(), indent=2)))
-            clusters.append(merged)
-            count += 1
+        merged = client.submit(merge_cluster, fst.result(), snd.result(), log_lines, thres)
+        logger.debug("merged %d: %s" % (count, json.dumps(merged.result(), indent=2)))
+        clusters.append(merged)
+        count += 1
 
-        # logger.debug("last: %s" % clusters)
-        comp_group = clusters[0].result()
+    logger.debug("last: %s" % clusters)
+    comp_group = clusters[0].result()
 
     comp = {}
     for i in range(0, max(comp_group.keys()) + 1):
@@ -157,7 +162,7 @@ def main():
         args.output_context.write(json.dumps(context, indent=2))
 
     env = Environment(
-        loader=PackageLoader('display_log', 'templates'),
+        loader=PackageLoader('dist_log', 'templates'),
         autoescape=select_autoescape(['html'])
     )
 
@@ -166,4 +171,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(traceback.format_exc())

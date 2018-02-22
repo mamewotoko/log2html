@@ -31,6 +31,12 @@ Distributed analysis
 ----------------------
 * dist_log.py
 
+
+TODO
+-----
+* add clickable histgram of each comp
+  * http://bl.ocks.org/KatiRG/5f168b5c884b1f9c36a5
+
 ----
 Takashi Masuyama < mamewotoko@gmail.com >  
 http://mamewo.ddo.jp/

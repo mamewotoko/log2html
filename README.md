@@ -4,6 +4,9 @@ log2html
 Clustering log lines with difflib.SequenceMatcher as similarity measure,
 display result as html table
 
+Result 
+------
+![result image](img/log2html_demo.png)
 
 Example1: clustering flake8 issues
 ----------------------------------

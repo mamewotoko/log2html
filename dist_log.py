@@ -84,14 +84,15 @@ def main():
     parser.add_argument('--threads', type=int, default=1, help='number of threads')
     parser.add_argument('--thres', type=float, default=0.8, help='sim thres')
     parser.add_argument('--output-context', type=argparse.FileType('w'), nargs='?')
-    parser.add_argument('--client', type=str, nargs=1, help='ipaddr:port of scheduler')
+    #parser.add_argument('--client', type=str, nargs=1, help='ipaddr:port of scheduler')
     parser.add_argument('files', nargs='*', help='path of log file')
 
     args = parser.parse_args()
 
     thres = args.thres
 
-    client = Client(args.client[0])
+    # client = Client(args.client[0])
+    client = Client('192.168.1.10:8788')
 
     log_lines = []
     for log in args.files:

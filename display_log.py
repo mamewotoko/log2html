@@ -6,12 +6,14 @@ import gzip
 import json
 import logging
 import random
+import sys
 
 from concurrent.futures import ProcessPoolExecutor
 from difflib import SequenceMatcher
 
-from jinja2 import Environment, PackageLoader, select_autoescape
-
+from jinja2 import Environment
+from jinja2 import PackageLoader
+from jinja2 import select_autoescape
 
 logger = logging.getLogger("display_log")
 logger.setLevel(logging.DEBUG)
@@ -95,8 +97,11 @@ def main():
             with gzip.open(log, "rt", encoding="utf-8") as f:
                 log_lines += f.read().splitlines()
         else:
-            with open(log, "r") as f:
-                log_lines += f.read().splitlines()
+            if log == '-':
+                log_lines += sys.stdin.read().splitlines()
+            else:
+                with open(log, "r") as f:
+                    log_lines += f.read().splitlines()
 
     nlines = len(log_lines)
 

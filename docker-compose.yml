@@ -5,8 +5,3 @@ services:
     build: .
     volumes:
       - .:/opt/work
-
-  doc:
-    build: doc
-    volumes:
-      - .:/work

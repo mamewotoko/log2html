@@ -2,13 +2,13 @@
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />  
+    <meta name="viewport" content="width=device-width" />
     <title>Log</title>
     <script
        src="https://code.jquery.com/jquery-3.2.1.min.js"
        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
        crossorigin="anonymous"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.css"> 
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
 
     <script>
@@ -20,15 +20,16 @@ $(function(){
   });
 });
 </script>
-    <style type="text/css">
+<style type="text/css">
+.logtable { font-size: 12px; }
       {% for comp in comps %}
-      .comp{{comp.comp_id}} { background-color: {{comp.comp_color}} !important; }
+.comp{{comp.comp_id}} { background-color: {{comp.comp_bg_color}} !important; color: {{comp.comp_fg_color}}; }
       {% endfor %}
     </style>
   </head>
   <body>
     comp {{num_comps}}/lines {{num_lines}}  Comp filter: <input type="text" id="comp_filter"/>
-    <table id="table" class="table">
+    <table id="table" class="table logtable">
       <thead>
         <tr><th>line</th><th>comp</th><th class="skip-filter">log</th></tr>
       </thead>
@@ -43,4 +44,3 @@ $(function(){
     </table>
   </body>
 </html>
-</body></html>

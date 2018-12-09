@@ -148,8 +148,17 @@ def main():
     context = {}
     context['comps'] = []
     for comp_id in comp_group.keys():
-        color = "#%06x" % random.randint(0, 0xFFFFFF)
-        context['comps'].append(dict(comp_id=comp_id, comp_color=color))
+        color = random.randint(0, 0xFFFFFF)
+        red = (color >> 8) & 0xFF
+        green = (color >> 4) & 0xFF
+        blue = color & 0xFF
+        if 186 < red * 0.299 + green * 0.587 + blue * 0.114:
+            fg_color = "#000000"
+        else:
+            fg_color = "#ffffff"
+        context['comps'].append(dict(comp_id=comp_id,
+                                     comp_bg_color="#%06x" % color,
+                                     comp_fg_color=fg_color))
 
     context['num_comps'] = len(context['comps'])
     context['num_lines'] = nlines

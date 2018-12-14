@@ -22,7 +22,7 @@ Example2: clustering apache log
 ./display_log.py /var/log/apache/error_log*
 ```
 
-[output example](https://mamewo.ddo.jp/log2html/)
+[output example](https://mamewo.ddo.jp/log2html/aimhutte_result.html)
 
 Example3: clustering adb log
 -----------------------------

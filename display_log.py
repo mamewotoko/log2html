@@ -7,6 +7,9 @@ import json
 import logging
 import random
 import sys
+import re
+import time
+from dateutil.parser import parse
 
 from concurrent.futures import ProcessPoolExecutor
 from difflib import SequenceMatcher
@@ -80,10 +83,34 @@ def merge_cluster(a, b, log_lines, thres):
     return result
 
 
+def get_time_from_log(line):
+    match = re.search('\[(.*?)\]', line)
+    if match is not None:
+        dt = parse(match.group(1), fuzzy=True)
+        epoch = time.mktime(dt.timetuple())
+        return epoch
+    m = re.match('(\d{2}):(\d{2}):(\d{2})', line)
+    if m is not None:
+        hour = int(m.group(1))
+        minute = int(m.group(2))
+        seconds = int(m.group(3))
+        sec_from_sod = 60 * 60 * hour + 60 * minute + seconds
+        return sec_from_sod
+    return None
+
+
+def get_ipaddress_from_log(line):
+    match = re.search('^([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ', line)
+    if match is not None:
+        return match.group(1)
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description='log viewer')
     parser.add_argument('--threads', type=int, default=1, help='number of threads')
     parser.add_argument('--thres', type=float, default=0.8, help='sim thres')
+    # unused
     parser.add_argument('--output-context', type=argparse.FileType('w'), nargs='?')
     parser.add_argument('files', nargs='*', help='path of log file')
 
@@ -164,12 +191,19 @@ def main():
     context['num_lines'] = nlines
     context['log_lines'] = []
 
+    start_time = None
     for i in range(0, len(log_lines)):
-        context['log_lines'].append(dict(log_id=i, comp_id=comp[i], content=log_lines[i]))
-
-    if args.output_context is not None:
-        args.output_context.write(json.dumps(context, indent=2))
-
+        line = log_lines[i]
+        log_time = get_time_from_log(line)
+        if start_time is None:
+            start_time = log_time
+        delta = log_time - start_time
+        context['log_lines'].append(dict(log_id=i,
+                                         comp_id=comp[i],
+                                         log_time=log_time,
+                                         delta=delta,
+                                         content=line))
+      
     env = Environment(
         loader=PackageLoader('display_log', 'templates'),
         autoescape=select_autoescape(['html'])
@@ -177,6 +211,8 @@ def main():
 
     template = env.get_template("template.html")
     print(template.render(context))
+    if args.output_context is not None:
+        args.output_context.write(json.dumps(context, indent=2))
 
 
 if __name__ == '__main__':

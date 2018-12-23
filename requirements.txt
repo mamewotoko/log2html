@@ -1,2 +1,2 @@
 jinja2
-dateutil
+python-dateutil

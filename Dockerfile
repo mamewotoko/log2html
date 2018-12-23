@@ -1,6 +1,7 @@
 FROM python:3.6.2-jessie
 
-RUN pip install jinja2
+ADD requirements.txt .
+RUN pip install -r requirements.txt
 RUN mkdir -p /opt/work
 
 WORKDIR "/opt/work"

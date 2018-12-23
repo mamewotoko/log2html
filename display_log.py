@@ -197,7 +197,10 @@ def main():
         log_time = get_time_from_log(line)
         if start_time is None:
             start_time = log_time
-        delta = log_time - start_time
+        if log_time is None or start_time is None:
+            delta = 0
+        else:
+            delta = log_time - start_time
         context['log_lines'].append(dict(log_id=i,
                                          comp_id=comp[i],
                                          log_time=log_time,

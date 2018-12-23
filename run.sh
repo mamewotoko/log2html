@@ -1,6 +1,7 @@
 #! /bin/sh
 set -e
 mkdir -p result
+docker-compose build
 
 for FILENAME in $*; do
     BASENAME=$(basename $FILENAME)

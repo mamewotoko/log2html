@@ -119,7 +119,7 @@ def main():
 
     log_lines = []
     for log in args.files:
-        logger.debug("processing %s" % log)
+        # logger.debug("processing %s" % log)
         if log.endswith(".gz"):
             with gzip.open(log, "rt", encoding="utf-8") as f:
                 log_lines += f.read().splitlines()
@@ -143,8 +143,8 @@ def main():
             clusters.append(future)
         remain = nlines % chunksize
         if 0 < remain:
-            future = executor.submit(cluster_lines,
-                                     range(nlines - remain, nlines),
+            future = executor.submit(range,
+                                     cluster_lines(nlines - remain, nlines),
                                      log_lines,
                                      thres)
             clusters.append(future)
@@ -206,7 +206,7 @@ def main():
                                          log_time=log_time,
                                          delta=delta,
                                          content=line))
-      
+
     env = Environment(
         loader=PackageLoader('display_log', 'templates'),
         autoescape=select_autoescape(['html'])

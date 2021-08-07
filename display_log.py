@@ -143,8 +143,8 @@ def main():
             clusters.append(future)
         remain = nlines % chunksize
         if 0 < remain:
-            future = executor.submit(range,
-                                     cluster_lines(nlines - remain, nlines),
+            future = executor.submit(cluster_lines,
+                                     range(nlines - remain, nlines),
                                      log_lines,
                                      thres)
             clusters.append(future)

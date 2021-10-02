@@ -6,6 +6,6 @@ docker-compose build
 for FILENAME in $*; do
     BASENAME=$(basename $FILENAME)
 
-    $SUDO zcat -f $FILENAME | docker-compose run --rm log2html ./display_log.py --threads 3 - > result/${BASENAME}.html
+    $SUDO zcat -f $FILENAME | docker-compose run --rm log2html ./display_log.py --threads 4 - > result/${BASENAME}.html
 done
 ./generate_index.py
